@@ -15,7 +15,9 @@ export class TodoService {
     ){}
 
     findAll(){
-        return this.todoRepo.find();
+        return this.todoRepo.find({
+            order: {id: 'ASC'},
+        });
     }
 
     async findOne(id: number){
