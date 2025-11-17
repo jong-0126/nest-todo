@@ -1,36 +1,41 @@
 import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { Todo } from './todo.entity';
+import { CreateTodoDto } from './dto/create-todo.dto';
+import { UpdateTodoDto } from './dto/update-todo.dto';
 
-export interface Todo {
-    id: number;
-    text: string;
-    done: boolean;
-}
 
 @Injectable()
 export class TodoService {
-    private todos: Todo[] = [
-        { id: 1, text: 'NestJS 배우기', done: false},
-    ];
+
+    constructor(
+        @InjectRepository(Todo)
+        private readonly todoRepo: Repository<Todo>,
+    ){}
 
     findAll(){
-        return this.todos;
+        return this.todoRepo.find();
     }
 
-    create(text: string){
-        const newTodo = { id: Date.now(), text, done: false};
-        this.todos.push(newTodo);
-        return newTodo;
+    async findOne(id: number){
+        return await this.todoRepo.findOneBy({id});
     }
 
-    update(id: number, data: Partial<Todo>) {
-        const todo = this.todos.find(t => t.id === id);
+    async create(dto: CreateTodoDto){
+        const todo = this.todoRepo.create({text: dto.text});    
+        return await this.todoRepo.save(todo);
+    }
+
+    async update(id: number, dto: UpdateTodoDto) {
+        const todo = await this.todoRepo.findOneBy({id});
         if(!todo) return null; 
-        Object.assign(todo, data);
-        return todo;
+        Object.assign(todo, dto);
+        return await this.todoRepo.save(todo);
     }
 
-    remove(id: number){
-        this.todos = this.todos.filter(t => t.id !== id);
+    async remove(id: number){
+        await this.todoRepo.delete(id);
         return { message: '삭제 완료'};
     }
 }
